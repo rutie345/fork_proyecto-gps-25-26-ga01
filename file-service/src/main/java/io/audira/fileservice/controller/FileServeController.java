@@ -77,7 +77,6 @@ public class FileServeController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -171,9 +170,8 @@ public class FileServeController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
                     .body(resource);
         } catch (Exception e) {
-            e.printStackTrace();
             // Si hay error parseando el range, devolver el archivo completo
-            return ResponseEntity.ok()
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                     .contentType(MediaType.parseMediaType(contentType))
                     .contentLength(fileSize)
                     .header(HttpHeaders.ACCEPT_RANGES, "bytes")
