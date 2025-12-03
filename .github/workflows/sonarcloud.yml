@@ -12,10 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      # The analysis requires to retrieve dependencies and build successfully
-      - name: Build
-        run: <mark><flutter run></mark>
+          fetch-depth: 0
+
+      # Paso necesario para instalar Flutter en el servidor de Github
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Descarga las dependencias para que Sonar pueda analizar el código
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # Opcional: Si quieres verificar errores de análisis de Dart antes de Sonar
+      - name: Analyze
+        run: flutter analyze
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
