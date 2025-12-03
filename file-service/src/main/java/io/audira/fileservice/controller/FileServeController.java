@@ -171,7 +171,7 @@ public class FileServeController {
                     .body(resource);
         } catch (Exception e) {
             // Si hay error parseando el range, devolver el archivo completo
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.parseMediaType(contentType))
                     .contentLength(fileSize)
                     .header(HttpHeaders.ACCEPT_RANGES, "bytes")
