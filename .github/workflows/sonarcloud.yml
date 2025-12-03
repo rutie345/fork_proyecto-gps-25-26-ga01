@@ -20,7 +20,8 @@ jobs:
           channel: 'stable'
 
       # Descarga las dependencias para que Sonar pueda analizar el código
-      - name: Install Dependencies
+      - name: Install Dependencies 
+        working-directory: ./file-service
         run: mvn clean package
 
       # Opcional: Si quieres verificar errores de análisis de Dart antes de Sonar
