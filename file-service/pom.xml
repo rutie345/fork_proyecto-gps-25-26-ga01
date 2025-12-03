@@ -36,6 +36,10 @@
         </dependency>
     </dependencies>
 
+    <properties>
+            <sonar.organization>rutie345</sonar.organization>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
