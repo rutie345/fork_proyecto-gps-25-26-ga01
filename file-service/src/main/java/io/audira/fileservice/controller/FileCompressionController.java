@@ -86,38 +86,53 @@ public class FileCompressionController {
     @PostMapping("/compress/single")
     public ResponseEntity<?> compressSingleFile(@RequestBody Map<String, String> request) {
         try {
-            String filePath = request.get("filePath");
+            String filename = request.get("filePath");
 
-            if (filePath == null || filePath.isEmpty()) {
+            if (filename == null || filename.isEmpty()) {
                 return ResponseEntity.badRequest().body(
-                    createErrorResponse("Debe proporcionar la ruta del archivo")
+                    createErrorResponse("Debe proporcionar el nombre del archivo")
                 );
             }
 
-            long originalSize = fileCompressionService.getFileSize(filePath);
-            String zipFilePath = fileCompressionService.compressSingleFile(filePath);
+            /* --- INICIO DEL BLOQUE DE SEGURIDAD --- */
+            
+            /* 1. Resolver la ruta: Combina el directorio base con la entrada del usuario */
+            Path resolvedPath = baseDirectory.resolve(filename).normalize();
+
+            /* 2. Validación de Path Traversal:
+            Verifica que la ruta resultante comience con la ruta base permitida.
+            Esto impide entradas como "../../../archivo_sistema" */
+            if (!resolvedPath.startsWith(baseDirectory)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    createErrorResponse("Acceso denegado: El archivo está fuera del directorio permitido")
+                );
+            }
+
+            /* Convertir a String para usar en el servicio, usando la ruta segura validada */
+            String safeFilePath = resolvedPath.toString();
+
+            /* --- FIN DEL BLOQUE DE SEGURIDAD --- */
+
+            /* Se usa safeFilePath en lugar de la entrada cruda del usuario */
+            long originalSize = fileCompressionService.getFileSize(safeFilePath);
+
+            String zipFilePath = fileCompressionService.compressSingleFile(safeFilePath);
             String zipFileUrl = baseUrl + "/api/files/" + zipFilePath;
 
             long compressedSize = fileCompressionService.getFileSize(zipFilePath);
+
             double compressionRatio = ((double) (originalSize - compressedSize) / originalSize) * 100;
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Archivo comprimido exitosamente");
-            response.put("zipFileUrl", zipFileUrl);
-            response.put("zipFilePath", zipFilePath);
-            response.put("originalSize", originalSize);
-            response.put("compressedSize", compressedSize);
-            response.put("compressionRatio", String.format("%.2f%%", compressionRatio));
-
-            return ResponseEntity.ok(response);
+            
+            /* Retorno de la respuesta (simplificado) */
+            return ResponseEntity.ok(Map.of(
+                "url", zipFileUrl,
+                "ratio", compressionRatio
+            ));
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                createErrorResponse("Error al comprimir archivo: " + e.getMessage())
-            );
+            return ResponseEntity.internalServerError().body(createErrorResponse("Error al comprimir"));
         }
     }
-
 /**
      * Crea una respuesta de error JSON estandarizada.
      *

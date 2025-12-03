@@ -73,28 +73,38 @@ public class FileCompressionService {
      * <p>
      * Útil para reducir el tamaño de transferencia de archivos pesados (como WAV o FLAC).
      * El nombre resultante conserva el original seguido de un sufijo UUID parcial.
-     * </p>
-     *
+     * </p> 
      * @param filePath Ruta relativa del archivo origen.
      * @return La ruta relativa del ZIP generado.
-     * @throws IOException Si falla la operación de E/S.
-     */    
+     * @throws IOException Si falla la operación de E/S o si hay un intento de violación de seguridad.
+     */
     public String compressSingleFile(String filePath) throws IOException {
+        /* 1. Definir el directorio base seguro */
         Path fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+
+        /* 2. Resolver y normalizar la ruta solicitada */
         Path sourceFile = fileStorageLocation.resolve(filePath).normalize();
+
+        /* 3. VALIDACIÓN DE SEGURIDAD (CRÍTICO) */
+        /* Verificamos que la ruta resuelta comience con la ruta base. */
+        /* Si no coincide, significa que el usuario intentó un Path Traversal (ej: ../../etc/passwd) */
+        if (!sourceFile.startsWith(fileStorageLocation)) {
+            throw new SecurityException("Acceso denegado: El archivo está fuera del directorio permitido.");
+        }
 
         if (!Files.exists(sourceFile)) {
             throw new FileNotFoundException("Archivo no encontrado: " + filePath);
         }
 
-        // Crear directorio para archivos comprimidos
+        /* Crear directorio para archivos comprimidos */
         Path compressedDir = fileStorageLocation.resolve("compressed");
         Files.createDirectories(compressedDir);
 
-        // Generar nombre único para el archivo ZIP
+        /* Generar nombre único para el archivo ZIP */
         String originalFileName = sourceFile.getFileName().toString();
         String zipFileName = originalFileName.substring(0, originalFileName.lastIndexOf('.')) + "_" +
                            UUID.randomUUID().toString().substring(0, 8) + ".zip";
+        
         Path zipFilePath = compressedDir.resolve(zipFileName);
 
         try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
@@ -104,6 +114,28 @@ public class FileCompressionService {
         }
 
         return "compressed/" + zipFileName;
+    }
+
+    /**
+     * Método auxiliar interno para escribir los bytes de un archivo en el flujo ZIP.
+     */
+    private void addFileToZip(Path sourceFile, ZipOutputStream zos, String entryName) throws IOException {
+        ZipEntry zipEntry = new ZipEntry(entryName);
+        zos.putNextEntry(zipEntry);
+
+        /* CORRECCIÓN: Usar Files.newInputStream en lugar de new FileInputStream(File) */
+        /* Al llegar aquí, sourceFile ya ha sido validado en el método anterior */
+        try (InputStream fis = Files.newInputStream(sourceFile)) {
+            
+            byte[] buffer = new byte[1024];
+            int length;
+
+            while ((length = fis.read(buffer)) > 0) {
+                zos.write(buffer, 0, length);
+            }
+        }
+
+        zos.closeEntry();
     }
 
     /**
