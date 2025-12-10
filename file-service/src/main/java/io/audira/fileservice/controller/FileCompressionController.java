@@ -38,7 +38,7 @@ public class FileCompressionController {
      * @return JSON con la URL de descarga y estadísticas de compresión.
      */    
     @PostMapping("/compress")
-    public ResponseEntity<?> compressFiles(@RequestBody Map<String, List<String>> request) {
+    public ResponseEntity<Object> compressFiles(@RequestBody Map<String, List<String>> request) {
         try {
             List<String> filePaths = request.get("filePaths");
 
