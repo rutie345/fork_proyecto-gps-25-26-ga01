@@ -99,7 +99,7 @@ public class FileCompressionController {
             /* --- INICIO DEL BLOQUE DE SEGURIDAD --- */
             
             /* 1. Resolver la ruta: Combina el directorio base con la entrada del usuario */
-            Path baseDirectory;
+            Path baseDirectory = null;
             Path resolvedPath = baseDirectory.resolve(filename).normalize();
 
             /* 2. Validación de Path Traversal:
