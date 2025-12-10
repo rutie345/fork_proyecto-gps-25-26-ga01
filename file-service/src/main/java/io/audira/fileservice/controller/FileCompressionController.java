@@ -1,6 +1,8 @@
 package io.audira.fileservice.controller;
 
 import io.audira.fileservice.service.FileCompressionService;
+import java.nio.file.Path;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -97,6 +99,7 @@ public class FileCompressionController {
             /* --- INICIO DEL BLOQUE DE SEGURIDAD --- */
             
             /* 1. Resolver la ruta: Combina el directorio base con la entrada del usuario */
+            Path baseDirectory;
             Path resolvedPath = baseDirectory.resolve(filename).normalize();
 
             /* 2. Validación de Path Traversal:

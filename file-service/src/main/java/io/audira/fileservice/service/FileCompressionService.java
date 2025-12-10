@@ -118,28 +118,6 @@ public class FileCompressionService {
 
     /**
      * Método auxiliar interno para escribir los bytes de un archivo en el flujo ZIP.
-     */
-    private void addFileToZip(Path sourceFile, ZipOutputStream zos, String entryName) throws IOException {
-        ZipEntry zipEntry = new ZipEntry(entryName);
-        zos.putNextEntry(zipEntry);
-
-        /* CORRECCIÓN: Usar Files.newInputStream en lugar de new FileInputStream(File) */
-        /* Al llegar aquí, sourceFile ya ha sido validado en el método anterior */
-        try (InputStream fis = Files.newInputStream(sourceFile)) {
-            
-            byte[] buffer = new byte[1024];
-            int length;
-
-            while ((length = fis.read(buffer)) > 0) {
-                zos.write(buffer, 0, length);
-            }
-        }
-
-        zos.closeEntry();
-    }
-
-    /**
-     * Método auxiliar interno para escribir los bytes de un archivo en el flujo ZIP.
      * <p>
      * Utiliza un buffer de 1KB para la transferencia de datos.
      * </p>
